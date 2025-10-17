@@ -16,6 +16,8 @@ namespace LeaveManagementSystem.Web.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IMapper mapper;
 
+        private const string NameExistsValidationMessage = "Leave type with the same name already exists in the database";
+
         public LeaveTypesController(ApplicationDbContext context, IMapper mapper)
         {
             _context = context;
@@ -69,6 +71,11 @@ namespace LeaveManagementSystem.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(LeaveTypeCreateVM leaveTypeCreate)
         {
+            if(await CheckIfLeaveTypeExists(leaveTypeCreate.Name))
+            {
+                ModelState.AddModelError(nameof(leaveTypeCreate.Name), NameExistsValidationMessage);
+            }
+
             if (ModelState.IsValid)
             {
                 var leaveType = mapper.Map<LeaveType>(leaveTypeCreate);
@@ -79,6 +86,8 @@ namespace LeaveManagementSystem.Web.Controllers
             }
             return View(leaveTypeCreate);
         }
+
+        
 
         // GET: LeaveTypes/Edit/5
         public async Task<IActionResult> Edit(int? id)
@@ -111,6 +120,11 @@ namespace LeaveManagementSystem.Web.Controllers
                 return NotFound();
             }
 
+            if (await CheckIfLeaveTypeExistsForEdit(leaveTypeEdit))
+            {
+                ModelState.AddModelError(nameof(leaveTypeEdit.Name), NameExistsValidationMessage);
+            }
+
             if (ModelState.IsValid)
             {
                 try
@@ -135,6 +149,7 @@ namespace LeaveManagementSystem.Web.Controllers
             return View(leaveTypeEdit);
         }
 
+        
         // GET: LeaveTypes/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
@@ -150,7 +165,9 @@ namespace LeaveManagementSystem.Web.Controllers
                 return NotFound();
             }
 
-            return View(leaveType);
+            var viewData = mapper.Map<LeaveTypeReadOnlyVM>(leaveType);
+
+            return View(viewData);
         }
 
         // POST: LeaveTypes/Delete/5
@@ -172,5 +189,19 @@ namespace LeaveManagementSystem.Web.Controllers
         {
             return _context.LeaveTypes.Any(e => e.Id == id);
         }
+
+        private async Task<bool> CheckIfLeaveTypeExists(string name)
+        {
+            var lowerCaseName = name.ToLower();
+            return await _context.LeaveTypes.AnyAsync(q => q.Name.ToLower().Equals(lowerCaseName));
+        }
+
+        private async Task<bool> CheckIfLeaveTypeExistsForEdit(LeaveTypeEditVM leaveTypeEdit)
+        {
+            var lowerCaseName = leaveTypeEdit.Name.ToLower();
+            return await _context.LeaveTypes.AnyAsync(q => q.Name.ToLower().Equals(lowerCaseName) 
+                    && q.Id != leaveTypeEdit.Id);
+        }
+
     }
 }
