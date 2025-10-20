@@ -21,7 +21,7 @@ builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 // Add Identity
 builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 {
-    options.SignIn.RequireConfirmedAccount = false;
+    options.SignIn.RequireConfirmedAccount = true;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
