@@ -3,7 +3,6 @@ using LeaveManagementSystem.Web.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
-using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,7 +20,7 @@ builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
 // Add Identity
 builder.Services
-    .AddDefaultIdentity<IdentityUser>(options =>
+    .AddDefaultIdentity<ApplicationUser>(options =>
     {
         options.SignIn.RequireConfirmedAccount = true; 
     })
@@ -43,7 +42,8 @@ using (var scope = app.Services.CreateScope())
 static async Task SeedDataAsync(IServiceProvider sp)
 {
     var roleMgr = sp.GetRequiredService<RoleManager<IdentityRole>>();
-    var userMgr = sp.GetRequiredService<UserManager<IdentityUser>>();
+    var userMgr = sp.GetRequiredService<UserManager<ApplicationUser>>();
+    var config = sp.GetRequiredService<IConfiguration>();
 
     string[] roles = { "Employee", "Supervisor", "Administrator" };
 
@@ -60,20 +60,40 @@ static async Task SeedDataAsync(IServiceProvider sp)
         }
     }
 
-    var config = sp.GetRequiredService<IConfiguration>();
-
+    
     var email = config["AdminUser:Email"];
     var password = config["AdminUser:Password"];
 
+    if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+        throw new Exception("Missing AdminUser:Email or AdminUser:Password in configuration/UserSecrets.");
+
     var admin = await userMgr.FindByEmailAsync(email);
+
     if (admin is null)
     {
-        admin = new IdentityUser { UserName = email, Email = email, EmailConfirmed = true };
+        admin = new ApplicationUser { UserName = email, Email = email, EmailConfirmed = true, FirstName = "Default", LastName = "Admin", DateOfBirth = new DateOnly(1990, 1, 1)
+        };
         var createUser = await userMgr.CreateAsync(admin, password);
         if (!createUser.Succeeded)
         {
             var msg = string.Join("; ", createUser.Errors.Select(e => $"{e.Code}:{e.Description}"));
             throw new Exception($"Admin user seed failed: {msg}");
+        }
+    }
+
+    else
+    {
+        bool changed = false;
+        if (string.IsNullOrWhiteSpace(admin.FirstName)) { admin.FirstName = "Default"; changed = true; }
+        if (string.IsNullOrWhiteSpace(admin.LastName)) { admin.LastName = "Admin"; changed = true; }
+        if (admin.DateOfBirth is null) { admin.DateOfBirth = new DateOnly(1990, 1, 1); changed = true; }
+
+        if (changed)
+        {
+            var upd = await userMgr.UpdateAsync(admin);
+            if (!upd.Succeeded)
+                throw new Exception("Admin user update failed: " +
+                    string.Join("; ", upd.Errors.Select(e => $"{e.Code}:{e.Description}")));
         }
     }
 
