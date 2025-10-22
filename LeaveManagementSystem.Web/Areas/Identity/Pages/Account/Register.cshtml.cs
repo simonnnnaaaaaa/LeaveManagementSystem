@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 #nullable disable
 
+using LeaveManagementSystem.Web.Services.LeaveAllocations;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
@@ -17,10 +18,12 @@ namespace LeaveManagementSystem.Web.Areas.Identity.Pages.Account
         private readonly IUserEmailStore<ApplicationUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
+        private readonly ILeaveAllocationsService _leaveAllocationsService;
 
         RoleManager<IdentityRole> _roleManager;
 
         public RegisterModel(
+            ILeaveAllocationsService leaveAllocationsService,
             UserManager<ApplicationUser> userManager,
             IUserStore<ApplicationUser> userStore,
             SignInManager<ApplicationUser> signInManager,
@@ -28,6 +31,7 @@ namespace LeaveManagementSystem.Web.Areas.Identity.Pages.Account
             IEmailSender emailSender,
             RoleManager<IdentityRole> roleManager)
         {
+            _leaveAllocationsService = leaveAllocationsService;
             _userManager = userManager;
             _userStore = userStore;
             _emailStore = GetEmailStore();
@@ -164,8 +168,11 @@ namespace LeaveManagementSystem.Web.Areas.Identity.Pages.Account
                 }
 
                 var userId = await _userManager.GetUserIdAsync(user);
+                await _leaveAllocationsService.AllocateLeave(userId);
+
                 var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                 code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+                
                 var callbackUrl = Url.Page(
                     "/Account/ConfirmEmail",
                     pageHandler: null,
