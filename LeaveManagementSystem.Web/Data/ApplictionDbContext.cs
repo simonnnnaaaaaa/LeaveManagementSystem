@@ -14,10 +14,11 @@ namespace LeaveManagementSystem.Web.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-            
         }
 
         public DbSet<LeaveType> LeaveTypes { get; set; }
+        public DbSet<LeaveAllocation> LeaveAllocations { get; set; }
+        public DbSet<Period> Periods { get; set; }
 
-    }
+        }
 }
