@@ -1,9 +1,16 @@
 ﻿
+using AutoMapper;
+using LeaveManagementSystem.Web.Models.LeaveAllocations;
 using Microsoft.EntityFrameworkCore;
+using System.Net.WebSockets;
 
 namespace LeaveManagementSystem.Web.Services.LeaveAllocations
 {
-    public class LeaveAllocationsService(ApplicationDbContext _context) : ILeaveAllocationsService
+    public class LeaveAllocationsService
+        (ApplicationDbContext _context, 
+        IHttpContextAccessor _httpContextAccessor, 
+        UserManager<ApplicationUser> _userManager,
+        IMapper _mapper) : ILeaveAllocationsService
     {
         public async Task AllocateLeave(string employeeId)
         {
@@ -40,7 +47,48 @@ namespace LeaveManagementSystem.Web.Services.LeaveAllocations
             await _context.SaveChangesAsync();
 
         }
+
+        public async Task<List<LeaveAllocation>> GetAllocations()
+        {
+            var user = await _userManager.GetUserAsync(_httpContextAccessor.HttpContext?.User);
+
+            var currentDate = DateTime.Now;
+
+            var LeaveAllocations = await _context.LeaveAllocations
+                .Include(q => q.LeaveType) //simuleaza un join
+                .Include(q => q.Period)
+                .Where(q => q.EmployeeId == user.Id && q.Period.EndDate.Year == currentDate.Year)
+                .ToListAsync();
+
+            return LeaveAllocations;
+
+        }
+
+        public async Task<EmployeeAllocationVM> GetEmployeeAllocations()
+        {
+            var allocations = await GetAllocations();
+            var allocationVmList = _mapper.Map<List<LeaveAllocation>, List<LeaveAllocationVM>>(allocations);
+
+            var user = await _userManager.GetUserAsync(_httpContextAccessor.HttpContext?.User);
+
+            var employeeVm = new EmployeeAllocationVM
+            {
+                DateOfBirth = (DateOnly)user.DateOfBirth,
+                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Id = user.Id,
+                LeaveAllocations = allocationVmList,
+
+                PeriodName = allocations.FirstOrDefault()?.Period?.Name ?? "—"
+            };
+
+            return employeeVm;
+
+        }
+
     }
 
+    
 
-}
+} 
