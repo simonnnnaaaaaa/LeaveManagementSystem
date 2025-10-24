@@ -11,6 +11,7 @@ namespace LeaveManagementSystem.Web.MappingProfiles
         {
             CreateMap<LeaveAllocation, LeaveAllocationVM>();
             CreateMap<Period, PeriodVM>();
+            CreateMap<ApplicationUser, EmployeeListVM>();
         }
     }
 }
