@@ -8,8 +8,8 @@
 }
 
 <h1>View Allocations for @Model.FirstName @Model.LastName</h1>
-<br/>
-@if(isAdmin)
+<br />
+@if (isAdmin)
 {
     <a asp-action="Index" class="btn btn-primary">Back to List</a>
     <br />
@@ -49,57 +49,63 @@
 </div>
 
 <hr />
-@if(isAdmin && !Model.IsCompletedAllocation)
+@if (isAdmin && !Model.IsCompletedAllocation)
 {
     <div class="alert alert-warning">
         <p>User is missing some leave allocations.</p>
     </div>
     <form asp-action="AllocateLeave">
         <input type="hidden" asp-for="@Model.Id" />
-        <input type="submit" value="Allocate Missing Leave Types" class="btn btn-warning" /> |
+        <input type="submit" value="Allocate Missing Leave Types" class="btn btn-warning" />
     </form>
     <br />
     <br />
 
 }
-<hr /> 
-@if(Model.LeaveAllocations.Any()) {
-<div class="card" >
-    <div class="card-header">
-        <h4>Leave Allocations for period @Model.LeaveAllocations[0].Period.Name</h4>
-    </div>
-    <ul class="list-group list-group-flush">
-        <li class="list-group-item">
-            <div class="row">
-                <div class="col" style="font-weight: bold">Leave Name</div>
-                <div class="col" style="font-weight: bold">Original Allocation</div>
-                <div class="col" style="font-weight: bold">Current Allocation</div>
-                <div class="col" style="font-weight: bold">Action</div>
-            </div>
-        </li>
-
-        @foreach (var allocation in Model.LeaveAllocations)
-        {
+<hr />
+@if (Model.LeaveAllocations.Any())
+{
+    <div class="card">
+        <div class="card-header">
+            <h4>Leave Allocations for period @Model.LeaveAllocations[0].Period.Name</h4>
+        </div>
+        <ul class="list-group list-group-flush">
             <li class="list-group-item">
                 <div class="row">
-                    <div class="col">@allocation.LeaveType.Name</div>
-                    <div class="col">
-                        <span class="badge rounded-pill bg-primary">@allocation.Days</span>
-                    </div>
-                    <div class="col">
-                        <span class="badge rounded-pill bg-warning">@allocation.Days</span>
-                    </div>
-                    <div class="col">
-                        <a asp-controller="LeaveRequest"
-                           asp-action="Create"
-                           class="btn btn-success">
-                            Request Leave
-                        </a>
-                    </div>
+                    <div class="col" style="font-weight: bold">Leave Name</div>
+                    <div class="col" style="font-weight: bold">Original Allocation</div>
+                    <div class="col" style="font-weight: bold">Current Allocation</div>
+                    <div class="col" style="font-weight: bold">Action</div>
                 </div>
             </li>
-        }
-    </ul>
+
+            @foreach (var allocation in Model.LeaveAllocations)
+            {
+                <li class="list-group-item">
+                    <div class="row">
+                        <div class="col">@allocation.LeaveType.Name</div>
+                        <div class="col">
+                            <span class="badge rounded-pill bg-primary">@allocation.Days</span>
+                        </div>
+                        <div class="col">
+                            <span class="badge rounded-pill bg-warning">@allocation.Days</span>
+                        </div>
+                        <div class="col">
+
+                            @if (isAdmin)
+                            {
+                                <a class="btn btn-warning" asp-action="EditAllocation" asp-route-id="@allocation.Id"> Edit Allocation
+                                </a>
+                            }
+
+                            <a asp-controller="LeaveRequest" asp-action="Create" class="btn btn-success">
+                                Request Leave
+                            </a>
+                        </div>
+                    </div>
+                </li>
+            }
+        </ul>
     </div>
 }
 else
@@ -108,5 +114,3 @@ else
         <h2>@message</h2>
     </div>
 }
-
-

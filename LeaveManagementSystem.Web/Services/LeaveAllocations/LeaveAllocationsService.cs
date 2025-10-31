@@ -42,6 +42,21 @@ namespace LeaveManagementSystem.Web.Services.LeaveAllocations
 
         }
 
+
+
+        public async Task<LeaveAllocationEditVM> GetEmployeeAllocation(int allocationId)
+        {
+            var allocation = await _context.LeaveAllocations
+                .Include(q => q.LeaveType)
+                .Include(q => q.Employee)
+                .FirstOrDefaultAsync(q => q.Id == allocationId);
+
+            var model = _mapper.Map<LeaveAllocationEditVM>(allocation);
+
+            return model;
+
+        }
+
         public async Task<EmployeeAllocationVM> GetEmployeeAllocations(string? userId)
         {
             var user = string.IsNullOrEmpty(userId)
@@ -85,6 +100,14 @@ namespace LeaveManagementSystem.Web.Services.LeaveAllocations
 
         }
 
+
+        public async Task EditAllocation(LeaveAllocationEditVM allocationEditVM)
+        {
+
+            await _context.LeaveAllocations.ExecuteUpdateAsync(s => s.SetProperty(e => e.Days, allocationEditVM.Days));
+
+        }
+
         private async Task<List<LeaveAllocation>> GetAllocations(string? userId)
         {
             var currentDate = DateTime.Now;
@@ -98,6 +121,11 @@ namespace LeaveManagementSystem.Web.Services.LeaveAllocations
             return LeaveAllocations;
 
         }
+
+        
+
+
+
     }
 
 }

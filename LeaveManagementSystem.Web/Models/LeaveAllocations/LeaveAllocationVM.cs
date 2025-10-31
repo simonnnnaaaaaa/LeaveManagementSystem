@@ -12,7 +12,8 @@ namespace LeaveManagementSystem.Web.Models.LeaveAllocations
 
         [Display(Name = "Allocation Period")]
         public PeriodVM Period { get; set; } = new PeriodVM();
-    
+
         public LeaveTypeReadOnlyVM LeaveType { get; set; } = new LeaveTypeReadOnlyVM();
     }
+
 }

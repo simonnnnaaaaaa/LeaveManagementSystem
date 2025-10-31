@@ -13,5 +13,8 @@ namespace LeaveManagementSystem.Web.Services.LeaveTypes
         Task<LeaveTypeEditVM> GetLeaveTypeForEditByIdAsync(int id);
         bool LeaveTypeExists(int id);
         Task Remove(int id);
+
+        
+        Task<bool> DaysExceedMaximum(int leaveTypeId, int days);
     }
 }
